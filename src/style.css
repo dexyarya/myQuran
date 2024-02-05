@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+    font-family: 'ilham';
+    src: url('../src/assets/font/AllahMuhammadColor-EaxJ4.ttf') format('truetype');
+    font-weight: bold;
+}
+
+@font-face {
+    font-family: 'arabic';
+    src: url('../src/assets/font/AmiriQuran-Regular.ttf') format('truetype');
+    font-weight: bold;
+}
+
+@font-face {
+    font-family: 'number';
+    src: url('../src/assets/font/0\ Titr\ Bold\ Bold.ttf') format('truetype');
+    font-weight: bold;
+}
