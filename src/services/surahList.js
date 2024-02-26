@@ -4,7 +4,7 @@ export const surahList = async () => {
     try {
         const response = await api.get("surahs");
         console.log(response.data);
-        return response.data;
+        return response.data;       
     } catch (error) {
         console.log(error);
         return error;

@@ -3,7 +3,7 @@ import {createRouter, createWebHistory} from 'vue-router'
 const routes = [
     {
         path: '/',
-        name: 'homePage',
+        name: 'alQuranPage',
         meta:{layout:'defaultLayout'},
         component: () => import('../pages/homePage.vue'),      
     },
@@ -13,6 +13,19 @@ const routes = [
         name: 'detailPage',
         meta:{layout:'layoutNotTab'},
         component: () => import('../pages/surahDetail.vue')
+    },
+
+    {
+        path:'/doa',
+        name:'doaPage',
+        meta:{layout:'defaultLayout'},
+        component: () => import('../pages/doaPage.vue')
+    },
+    {
+        path:'/doa/:id',
+        name:'doaDetail',
+        meta:{layout:'layoutNotTab'},
+        component: () => import('../pages/doaDetailPage.vue')
     }
 ]
 const router = createRouter({
