@@ -12,7 +12,7 @@ const doa = () => {
 }
 // create function to route to jadwal shalat page
 const jadwalShalat = () => {
-  router.push("/jadwal-shalat")
+  router.push("/jadwalshalat")
 }
 </script>
 

@@ -26,6 +26,12 @@ const routes = [
         name:'doaDetail',
         meta:{layout:'layoutNotTab'},
         component: () => import('../pages/doaDetailPage.vue')
+    },
+    {
+        path:'/jadwalShalat',
+        name:'jadwalShalat',
+        meta:{layout:'defaultLayout'},
+        component: () => import('../pages/jadwalShalat.vue')
     }
 ]
 const router = createRouter({
