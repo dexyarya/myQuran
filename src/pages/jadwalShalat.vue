@@ -9,6 +9,11 @@ const dataTbale = ref([])
 const dateNow = ref(null)
 const myLocation = ref(null)
 const loading = ref(false)
+const hours = ref(null)
+const minutes = ref(null)
+const seconds = ref(null)
+const timePrayer = ref(null)
+const nextPray = ref(null)
 
 const fieldTable = ref([
   "Tanggal",
@@ -46,11 +51,16 @@ const showError = (error) => {
 }
 
 const getJadwalShalat = async () => {
-  console.log(location.value)
+  const year = dateNow.value.split(" ")[2]
+
+  const formateDateTime = new Date().toLocaleDateString()
+
+  const month = new Date(formateDateTime).getMonth() + 1
+
   if (location.value !== null) {
     try {
       const response = await axios.get(
-        `https://api.aladhan.com/v1/calendar/2024/2?latitude=${
+        `https://api.aladhan.com/v1/calendar/${year}/${month}?latitude=${
           location.value.latitude
         }&longitude=${location.value.longitude}&method=15`
       )
@@ -58,7 +68,6 @@ const getJadwalShalat = async () => {
       data.value = response.data.data
 
       data.value.forEach((item) => {
-        console.log("ini item looping", item)
         const date = item.date.readable
         const fajr = item.timings.Fajr
         const sunrise = item.timings.Sunrise
@@ -69,7 +78,8 @@ const getJadwalShalat = async () => {
         const imsak = item.timings.Imsak
         const midnight = item.timings.Midnight
         const locationNow = item.meta.timezone
-        myLocation.value = locationNow
+        const delimeeter = "/"
+        myLocation.value = getNameLocation(locationNow, delimeeter)
 
         dataTbale.value.push({
           date,
@@ -83,11 +93,23 @@ const getJadwalShalat = async () => {
           midnight,
         })
       })
+
+      setInterval(() => {
+        getTimeShalat()
+      }, 1000)
     } catch (error) {
-      console.log(error)
     } finally {
       loading.value = false
     }
+  }
+}
+
+const getNameLocation = (string, delimiters) => {
+  var indexGarisMiring = string.indexOf(delimiters)
+  if (indexGarisMiring === -1 || indexGarisMiring === string.length - 1) {
+    return "Tidak ada karakter setelah delimiter"
+  } else {
+    return string.substring(indexGarisMiring + 1)
   }
 }
 
@@ -99,15 +121,47 @@ const getLocation = () => {
   var yyyy = today.getFullYear()
 
   var formattedDate = dd + " " + mm + " " + yyyy
-  console.log(formattedDate) // Contoh output: "28 Feb 2024"
-
-  console.log("fksalfks", formattedDate)
 
   dateNow.value = formattedDate
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(showPosition, showError)
   } else {
     error.value = "Geolocation tidak didukung oleh browser ini."
+  }
+}
+
+const getTimeShalat = () => {
+  const todayDate = dataTbale.value.find((item) => item.date === dateNow.value)
+
+  if (todayDate) {
+    var nextPrayer = ""
+    var prayerTime = Object.keys(todayDate).filter(
+      (key) => key !== "date" && key !== "midnight"
+    )
+
+    for (let i = 0; i < prayerTime.length; i++) {
+      if (todayDate[prayerTime[i]] > new Date().toLocaleTimeString()) {
+        nextPrayer = prayerTime[i]
+        timePrayer.value = nextPrayer.toUpperCase()
+
+        break
+      }
+    }
+
+    if (prayerTime !== "") {
+      var nextPrayerTime = todayDate[nextPrayer]
+      nextPray.value = todayDate[nextPrayer]
+
+      var prayerTime = new Date(dateNow.value + " " + nextPrayerTime)
+      var timeDifference = prayerTime - new Date()
+
+      hours.value = Math.floor(timeDifference / (1000 * 60 * 60))
+      minutes.value = Math.floor(
+        (timeDifference % (1000 * 60 * 60)) / (1000 * 60)
+      )
+      seconds.value = Math.floor((timeDifference % (1000 * 60)) / 1000)
+    }
+  } else {
   }
 }
 
@@ -120,66 +174,81 @@ onMounted(async () => {
 })
 </script>
 <template>
-  <div
-    class="grid grid-cols-1  gap-3 w-full justify-content-between px-6 py-3 mx-5 my-6 max-w-screen-xl "
-  >
-    <div class="text-white">
-      {{ myLocation }}
-    </div>
-    <div v-if="loading" class=" flex items-center justify-center align-center">
-      <loading-ceomponent></loading-ceomponent>
-    </div>
+  <div class="mx-5 max-w-screen-x">
+    <div class="text-white flex align-center justify-center w-full ">
+      <div class="flex flex-col justify-center items-center">
+        <h1>
+          Waktu shalat <span>{{ timePrayer }}</span>
+        </h1>
+        {{ nextPray }}
 
-    <div v-else class="h-96 overflow-x-auto z-0">
-      <table
-        class=" z-0 w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400"
+        <h2>{{ hours }} : {{ minutes }} : {{ seconds }}</h2>
+        <h2>
+          Untuk wilayah <span> {{ myLocation }}</span>
+        </h2>
+      </div>
+    </div>
+    <div
+      class="grid grid-cols-1  gap-3 w-full justify-content-between px-12 py-3  my-6  "
+    >
+      <div
+        v-if="loading"
+        class=" flex items-center justify-center align-center"
       >
-        <thead
-          class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400 sticky-header"
-        >
-          <tr>
-            <th v-for="field in fieldTable" scope="col" class="px-6 py-3">
-              {{ field }}
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            :class="{
-              'bg-orange-200': dateNow === itemtable.date,
-              'bg-dark': dateNow !== itemtable.date,
-            }"
-            class="border-b dark:border-gray-700"
-            v-for="itemtable in dataTbale"
-          >
-            <td class="px-6 py-4 font-bold  ">
-              {{ itemtable.date }}
-            </td>
-            <td class="px-6 py-4">
-              {{ itemtable.fajr }}
-            </td>
-            <td class="px-6 py-4">
-              {{ itemtable.sunrise }}
-            </td>
-            <td class="px-6 py-4">
-              {{ itemtable.dhuhr }}
-            </td>
-            <td class="px-6 py-4">
-              {{ itemtable.asr }}
-            </td>
-            <td class="px-6 py-4">
-              {{ itemtable.maghrib }}
-            </td>
-            <td class="px-6 py-4">
-              {{ itemtable.isha }}
-            </td>
+        <loading-ceomponent></loading-ceomponent>
+      </div>
 
-            <td class="px-6 py-4">
-              {{ itemtable.midnight }}
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div v-else class="h-96 overflow-x-auto z-0">
+        <table
+          class=" z-0 w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400"
+        >
+          <thead
+            class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400 sticky-header"
+          >
+            <tr>
+              <th v-for="field in fieldTable" scope="col" class="px-6 py-3">
+                {{ field }}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              :class="{
+                'bg-orange-200': dateNow === itemtable.date,
+                'bg-dark': dateNow !== itemtable.date,
+              }"
+              class="border-b dark:border-gray-700"
+              v-for="itemtable in dataTbale"
+            >
+              <td class="px-6 py-4 font-bold  ">
+                {{ itemtable.date }}
+              </td>
+              <td class="px-6 py-4">
+                {{ itemtable.fajr }}
+              </td>
+              <td class="px-6 py-4">
+                {{ itemtable.sunrise }}
+              </td>
+              <td class="px-6 py-4">
+                {{ itemtable.dhuhr }}
+              </td>
+              <td class="px-6 py-4">
+                {{ itemtable.asr }}
+              </td>
+              <td class="px-6 py-4">
+                {{ itemtable.maghrib }}
+              </td>
+              <td class="px-6 py-4">
+                {{ itemtable.isha }}
+              </td>
+
+              <td class="px-6 py-4">
+                {{ itemtable.midnight }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </template>

@@ -54,6 +54,17 @@ const jadwalShalat = () => {
         />
         <p class="mt-3">Jadwal Shalat</p>
       </div>
+      <div
+        class="cursor-pointer flex flex-col items-center justify-center align-center text-white hover:text-green-400"
+        @click="jadwalShalat"
+      >
+        <img
+          src="../assets/icons/islam.png"
+          alt="alquran"
+          class="max-w-full h-auto h-16 w-16 hidden sm:block"
+        />
+        <p class="mt-3">Shalawat</p>
+      </div>
     </div>
   </div>
 </template>
